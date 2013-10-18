@@ -1,0 +1,40 @@
+1. Download Solr 4.5
+2. Clone https://github.com/vthacker/stackoverflow-search-demo
+4. java -Dsolr.solr.home=example-schemaless/solr -jar start.jar 
+5. curl http://localhost:8983/solr/collection1/update/csv?commit=true --data-binary @QueryResults.csv -H 'Content-type:text/plain; charset=utf-8'
+6. curl 'http://localhost:8983/solr/varun/update/json' -H 'Content-type:application/json' -d '
+{
+  "delete": {
+    "query":"*:*"
+  },"commit":{}
+}'
+7. curl http://localhost:8983/solr/collection1/schema/fields -X POST -H 'Content-type:application/json' --data-binary '
+[
+    { 
+        "name":"Body",
+        "type":"text_general",
+        "stored":true
+    },
+    { 
+        "name":"Title",
+        "type":"text_general",
+        "stored":true
+    },
+    { 
+        "name":"Tags",
+        "type":"text_en_splitting",
+        "stored":true
+    }
+]'
+8. New request Handler
+  <requestHandler name="/search" class="solr.SearchHandler">
+    <lst name="defaults">
+      <str name="echoParams">explicit</str>
+      <str name="defType">edismax</str>
+      <str name="wt">json</str>
+      <str name="indent">true</str>
+      <str name="qf">Title^5 Tags^3</str>
+      <str name="pf">Body~1^2 Body~2^1</str>
+      <str name="mm">60%<str>
+    </lst>
+  </requestHandler> 
